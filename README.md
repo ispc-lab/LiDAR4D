@@ -1,15 +1,15 @@
 # LiDAR4D
-<img src="https://github.com/ispc-lab/LiDAR4D/assets/51731102/7f3dd959-9b97-481e-8c13-45abbc2b712d" width=20%>
+<img src="https://github.com/ispc-lab/LiDAR4D/assets/51731102/7f3dd959-9b97-481e-8c13-45abbc2b712d" width=25%>
 
 **LiDAR4D: Dynamic Neural Fields for Novel Space-time View LiDAR Synthesis**  
 [Zehan Zheng](https://dyfcalid.github.io/), [Fan Lu](https://fanlu97.github.io/), Weiyi Xue, [Guang Chen](https://ispc-group.github.io/)†, Changjun Jiang  († Corresponding author)  
 **CVPR 2024**
 
-**[Paper]() | [Project Page](https://dyfcalid.github.io/LiDAR4D)**  
+**[Paper](https://arxiv.org/abs/2404.02742) | [Project Page](https://dyfcalid.github.io/LiDAR4D)**  
 
 This repository is the PyTorch implementation for LiDAR4D.
 
-<img src="https://github.com/ispc-lab/LiDAR4D/assets/51731102/e23640bf-bd92-4ee0-88b4-375faf8c9b4d" width=40%>
+<img src="https://github.com/ispc-lab/LiDAR4D/assets/51731102/e23640bf-bd92-4ee0-88b4-375faf8c9b4d" width=50%>
 
 ## Changelog
 2023-4-4:🔥 You can reach the preprint paper on arXiv as well as the project page.  
