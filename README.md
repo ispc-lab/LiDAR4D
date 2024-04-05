@@ -17,6 +17,12 @@ This repository is the official PyTorch implementation for LiDAR4D.
 2023-2-27:🎉 Our paper is accepted by CVPR 2024.  
 
 
+## Introduction
+<img src="https://github.com/ispc-lab/LiDAR4D/assets/51731102/42083b63-2459-4eb9-bb8f-651eca0a1148" width=90%>  
+
+LiDAR4D is a differentiable LiDAR-only framework for novel space-time LiDAR view synthesis, which reconstructs dynamic driving scenarios and generates realistic LiDAR point clouds end-to-end. It adopts 4D hybrid neural representations and motion priors derived from point clouds for geometry-aware and time-consistent large-scale scene reconstruction.
+
+
 ## Getting started
 
 
@@ -53,6 +59,9 @@ python setup.py install
 
 #### KITTI-360 dataset ([Download](https://www.cvlibs.net/datasets/kitti-360/download.php))
 We use sequence00 (`2013_05_28_drive_0000_sync`) for experiments in our paper.  
+
+<img src="https://github.com/ispc-lab/LiDAR4D/assets/51731102/c9f5d5c5-ac48-4d54-8109-9a8b745bbca0" width=50%>  
+
 Download KITTI-360 dataset and put them into `data/kitti360` (or use symlinks: `ln -s DATA_ROOT/KITTI-360 ./data/kitti360/`).  
 The folder tree is as follows:  
 
@@ -97,6 +106,13 @@ Run the following command:
 bash run_kitti_lidar4d.sh
 ```
 
+## Acknowledgment
+We sincerely appreciate the great contribution of the following works:
+- [tiny-cuda-nn](https://github.com/NVlabs/tiny-cuda-nn/tree/master)
+- [LiDAR-NeRF](https://github.com/tangtaogo/lidar-nerf)
+- [NFL](https://research.nvidia.com/labs/toronto-ai/nfl/)
+- [K-Planes](https://github.com/sarafridov/K-Planes)
+
 
 ## Citation
 Please use the following citation if you find our repo or paper helps:  
@@ -109,7 +125,6 @@ Please use the following citation if you find our repo or paper helps:
   }
 ```
 
-<!-- ## Acknowledgment -->
 
 ## License
 All code within this repository is under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
