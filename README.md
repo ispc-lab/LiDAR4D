@@ -7,20 +7,20 @@
 
 **[Paper](https://arxiv.org/abs/2404.02742) | [Project Page](https://dyfcalid.github.io/LiDAR4D)**  
 
-This repository is the PyTorch implementation for LiDAR4D.
+This repository is the official PyTorch implementation for LiDAR4D.
 
 <img src="https://github.com/ispc-lab/LiDAR4D/assets/51731102/e23640bf-bd92-4ee0-88b4-375faf8c9b4d" width=50%>
 
 ## Changelog
+2023-4-5:🚀 Code of LiDAR4D is released.  
 2023-4-4:🔥 You can reach the preprint paper on arXiv as well as the project page.  
-2023-2-27:🎉 Our paper is accepted by CVPR 2024.
+2023-2-27:🎉 Our paper is accepted by CVPR 2024.  
 
 
 ## Getting started
 
-**Code will be released in a few days.** 🚀🚀🚀
 
-<!-- ### Installation
+### Installation
 
 ```bash
 git clone https://github.com/ispc-lab/LiDAR4D.git
@@ -51,11 +51,10 @@ python setup.py install
 
 ### Dataset
 
-#### KITTI-360 dataset
-
-First, download KITTI-360 dataset from
-[here](https://www.cvlibs.net/datasets/kitti-360/index.php) and put the dataset
-into `data/kitti360`. Your folder structure should look like this:
+#### KITTI-360 dataset ([Download](https://www.cvlibs.net/datasets/kitti-360/download.php))
+We use sequence00 (`2013_05_28_drive_0000_sync`) for experiments in our paper.  
+Download KITTI-360 dataset and put them into `data/kitti360` (or use symlinks: `ln -s DATA_ROOT/KITTI-360 ./data/kitti360/`).  
+The folder tree is as follows:  
 
 ```bash
 data
@@ -66,13 +65,13 @@ data
         └── data_poses
 ```
 
-Next, run KITTI-360 dataset preprocessing: (set `DATASET` and `SEQ_ID`)
+Next, run KITTI-360 dataset preprocessing: (set `DATASET` and `SEQ_ID`)  
 
 ```bash
 bash preprocess_data.sh
 ```
 
-After preprocessing, your folder structure should look like this:
+After preprocessing, your folder structure should look like this:  
 
 ```bash
 configs
@@ -91,10 +90,13 @@ data
 
 ### Run LiDAR4D
 
+Set corresponding sequence config path in `--config` and you can modify logging file path in `--workspace`. Remember to set available GPU ID in `CUDA_VISIBLE_DEVICES`.   
+Run the following command:
 ```bash
 # KITTI-360
 bash run_kitti_lidar4d.sh
-``` -->
+```
+
 
 ## Citation
 Please use the following citation if you find our repo or paper helps:  

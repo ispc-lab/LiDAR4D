@@ -1,0 +1,16 @@
+tqdm
+rich
+numpy
+scipy
+lpips
+packaging
+torch-ema
+torchmetrics
+opencv-python
+tensorboardX
+scikit-image
+open3d
+configargparse
+imageio==2.13.0
+imageio-ffmpeg==0.4.8
+pyquaternion
