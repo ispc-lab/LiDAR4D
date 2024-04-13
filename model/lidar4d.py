@@ -118,7 +118,7 @@ class LiDAR4D(LiDAR_Renderer):
             },
         )
 
-        self.unet = UNet(in_channels=3, num_classes=1)
+        self.unet = UNet(in_channels=3, out_channels=1)
 
     def forward(self, x, d, t):
         pass

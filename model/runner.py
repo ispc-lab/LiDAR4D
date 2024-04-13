@@ -817,11 +817,6 @@ class Trainer(object):
             self.ema = None    # no need for final model weights
 
         self.model.eval()
-        self.model.unet.train()
-
-        optimizer = torch.optim.Adam(self.model.unet.parameters(), lr=0.001, weight_decay=0)
-
-        loss_total = []
 
         raydrop_input_list = []
         raydrop_gt_list = []
@@ -863,8 +858,15 @@ class Trainer(object):
         raydrop_input = torch.cat(raydrop_input_list, dim=0).cuda().float().contiguous() # [B, 3, H, W]
         raydrop_gt = torch.cat(raydrop_gt_list, dim=0).cuda().float().contiguous()       # [B, 1, H, W]
 
+        self.model.unet.train()
+
+        loss_total = []
+
         refine_bs = None # set smaller batch size if OOM and adjust epochs accordingly
         refine_epoch = 1000
+
+        optimizer = torch.optim.Adam(self.model.unet.parameters(), lr=0.001, weight_decay=0)
+        scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.001, total_steps=refine_epoch)
 
         self.log("Start UNet Optimization ...")
         for i in range(refine_epoch):
@@ -878,6 +880,19 @@ class Trainer(object):
                 input = raydrop_input
                 gt = raydrop_gt
 
+            # random mask
+            mask = torch.ones_like(input).to(input.device)
+            box_num_max = 32
+            box_size_y_max = int(0.1 * input.shape[2])
+            box_size_x_max = int(0.1 * input.shape[3])
+            for j in range(np.random.randint(box_num_max)):
+                box_size_y = np.random.randint(1, box_size_y_max)
+                box_size_x = np.random.randint(1, box_size_x_max)
+                yi = np.random.randint(input.shape[2]-box_size_y)
+                xi = np.random.randint(input.shape[3]-box_size_x)
+                mask[:, :, yi:yi+box_size_y, xi:xi+box_size_x] = 0.
+            input = input * mask
+
             raydrop_refine = self.model.unet(input)
             bce_loss = self.bce_fn(raydrop_refine, gt)
             loss = bce_loss
@@ -885,12 +900,13 @@ class Trainer(object):
             loss.backward()
 
             loss_total.append(loss.item())
-    
-            optimizer.step()
 
             if i % 50 == 0:
                 log_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-                self.log(f"[{log_time}] iter:{i}, raydrop loss:{loss.item()}")
+                self.log(f"[{log_time}] iter:{i}, lr:{optimizer.param_groups[0]['lr']:.6f}, raydrop loss:{loss.item()}")
+
+            optimizer.step()
+            scheduler.step()
 
         state = {
             "epoch": self.epoch,
