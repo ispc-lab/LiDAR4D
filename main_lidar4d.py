@@ -176,6 +176,7 @@ def main():
         far_lidar=opt.far_lidar,
         density_scale=opt.density_scale,
         active_sensor=opt.active_sensor,
+        flow_loss=opt.flow_loss
     )
     # print(model)
     print(opt)

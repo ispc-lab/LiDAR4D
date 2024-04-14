@@ -41,10 +41,12 @@ class LiDAR4D(LiDAR_Renderer):
         out_lidar_dim=2,
         num_frames=51,
         bound=1,
+        flow_loss=True,
         **kwargs,
     ):
         super().__init__(bound, **kwargs)
 
+        self.flow_loss = flow_loss
         self.out_lidar_dim = out_lidar_dim
         self.num_frames = num_frames
 
@@ -161,30 +163,31 @@ class LiDAR4D(LiDAR_Renderer):
 
         plane_feat_s, plane_feat_d = self.planes_encoder(xt)
 
-        # integrate neighboring dynamic features
-        flow = self.flow_net(xt)
-        hash_feat_1 = hash_feat_2 = hash_feat_d
-        plane_feat_1 = plane_feat_2 = plane_feat_d
-        if frame_idx < self.num_frames - 1:
-            x1 = x + flow[:, :3]
-            t1 = torch.tensor((frame_idx + 1) / self.num_frames)
-            with torch.no_grad():
-                hash_feat_1 = self.hash_encoder.forward_dynamic(x1, t1)
-            t1 = t1.repeat(x1.shape[0], 1).to(x1.device)
-            xt1 = torch.cat([x1, t1], dim=-1)
-            plane_feat_1 = self.planes_encoder.forward_dynamic(xt1)
+        if flow_loss:
+            # integrate neighboring dynamic features
+            flow = self.flow_net(xt)
+            hash_feat_1 = hash_feat_2 = hash_feat_d
+            plane_feat_1 = plane_feat_2 = plane_feat_d
+            if frame_idx < self.num_frames - 1:
+                x1 = x + flow[:, :3]
+                t1 = torch.tensor((frame_idx + 1) / self.num_frames)
+                with torch.no_grad():
+                    hash_feat_1 = self.hash_encoder.forward_dynamic(x1, t1)
+                t1 = t1.repeat(x1.shape[0], 1).to(x1.device)
+                xt1 = torch.cat([x1, t1], dim=-1)
+                plane_feat_1 = self.planes_encoder.forward_dynamic(xt1)
 
-        if frame_idx > 0:
-            x2 = x + flow[:, 3:]
-            t2 = torch.tensor((frame_idx - 1) / self.num_frames)
-            with torch.no_grad():
-                hash_feat_2 = self.hash_encoder.forward_dynamic(x2, t2)
-            t2 = t2.repeat(x2.shape[0], 1).to(x2.device)
-            xt2 = torch.cat([x2, t2], dim=-1)
-            plane_feat_2 = self.planes_encoder.forward_dynamic(xt2)
+            if frame_idx > 0:
+                x2 = x + flow[:, 3:]
+                t2 = torch.tensor((frame_idx - 1) / self.num_frames)
+                with torch.no_grad():
+                    hash_feat_2 = self.hash_encoder.forward_dynamic(x2, t2)
+                t2 = t2.repeat(x2.shape[0], 1).to(x2.device)
+                xt2 = torch.cat([x2, t2], dim=-1)
+                plane_feat_2 = self.planes_encoder.forward_dynamic(xt2)
 
-        plane_feat_d = 0.5 * plane_feat_d + 0.25 * (plane_feat_1 + plane_feat_2)
-        hash_feat_d = 0.5 * hash_feat_d + 0.25 * (hash_feat_1 + hash_feat_2)
+            plane_feat_d = 0.5 * plane_feat_d + 0.25 * (plane_feat_1 + plane_feat_2)
+            hash_feat_d = 0.5 * hash_feat_d + 0.25 * (hash_feat_1 + hash_feat_2)
 
         features = torch.cat([plane_feat_s, plane_feat_d,
                               hash_feat_s, hash_feat_d], dim=-1)
