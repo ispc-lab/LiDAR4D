@@ -56,9 +56,12 @@ def grid_sample_wrapper(grid: torch.Tensor, coords: torch.Tensor, align_corners:
     coords = coords.view([coords.shape[0]] + [1] * (grid_dim - 1) + list(coords.shape[1:]))
     B, feature_dim = grid.shape[:2]
     n = coords.shape[-2]
+
+    # grid_sample expects values in the range of [-1, 1]
+    coords_normalized = coords * 2.0 - 1
     interp = grid_sampler(
         grid,  # [B, feature_dim, reso, ...]
-        coords,  # [B, 1, ..., n, grid_dim]
+        coords_normalized,  # [B, 1, ..., n, grid_dim]
         align_corners=align_corners,
         mode='bilinear', padding_mode='border')
     interp = interp.view(B, feature_dim, n).transpose(-1, -2)  # [B, n, feature_dim]
