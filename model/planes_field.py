@@ -9,9 +9,24 @@
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-from typing import Optional, Union, List, Dict, Sequence, Iterable, Collection, Callable
-import itertools
+import math
 import numpy as np
+import itertools
+from typing import Optional, Sequence, Iterable, Collection
+
+
+def reduction_func(reduction):
+    # x: list of Tensor
+    if reduction == 'prod':
+        return math.prod
+    elif reduction == 'sum':
+        return sum
+    elif reduction == 'mean':
+        return lambda x: sum(x)/len(x)
+    elif reduction == 'concat':
+        return lambda x: torch.cat(x, dim=-1)
+    else:
+        raise ValueError("Invalid reduction")
 
 
 def init_grid_param(
@@ -58,10 +73,10 @@ def grid_sample_wrapper(grid: torch.Tensor, coords: torch.Tensor, align_corners:
     n = coords.shape[-2]
 
     # grid_sample expects values in the range of [-1, 1]
-    coords_normalized = coords * 2.0 - 1
+    coords = coords * 2.0 - 1
     interp = grid_sampler(
         grid,  # [B, feature_dim, reso, ...]
-        coords_normalized,  # [B, 1, ..., n, grid_dim]
+        coords,  # [B, 1, ..., n, grid_dim]
         align_corners=align_corners,
         mode='bilinear', padding_mode='border')
     interp = interp.view(B, feature_dim, n).transpose(-1, -2)  # [B, n, feature_dim]
@@ -72,21 +87,23 @@ def grid_sample_wrapper(grid: torch.Tensor, coords: torch.Tensor, align_corners:
 def interpolate_ms_features(pts: torch.Tensor,
                             ms_grids: Collection[Iterable[nn.Module]],
                             grid_dimensions: int,
-                            concat_features: bool,
+                            concat_ms_feat: bool,
                             num_levels: Optional[int] = None,
                             sample_only = None,
+                            reduction = 'prod',
                             ) -> torch.Tensor:
     coo_combs = list(itertools.combinations(
         range(pts.shape[-1]), grid_dimensions)
     )
+    reduction = reduction_func(reduction)
     if num_levels is None:
         num_levels = len(ms_grids)
-    multi_scale_interp_static = [] if concat_features else 0.
-    multi_scale_interp_dynamic = [] if concat_features else 0.
+    ms_feat_static = [] # multi scale feature static
+    ms_feat_dynamic = [] # multi scale feature dynamic
     grid: nn.ParameterList
     for scale_id, grid in enumerate(ms_grids[:num_levels]):
-        interp_space_static = 1.
-        interp_space_dynamic = 1.
+        feat_static = [] # static feature
+        feat_dynamic = [] # dynamic feature
         for ci, coo_comb in enumerate(coo_combs):
             if sample_only == 'static' and 3 in coo_comb:
                 continue
@@ -100,33 +117,28 @@ def interpolate_ms_features(pts: torch.Tensor,
             )
             # compute product over planes
             if 3 in coo_comb: # time planes
-                interp_space_dynamic = interp_space_dynamic * interp_out_plane
+                feat_dynamic.append(interp_out_plane)
             else:
-                interp_space_static = interp_space_static * interp_out_plane
+                feat_static.append(interp_out_plane)
 
-        # combine over scales
-        if concat_features:
-            multi_scale_interp_static.append(interp_space_static)
-            multi_scale_interp_dynamic.append(interp_space_dynamic)
-        else:
-            multi_scale_interp_static = multi_scale_interp_static + interp_space_static
-            multi_scale_interp_dynamic = multi_scale_interp_dynamic + interp_space_dynamic
+        ms_feat_static.append(reduction(feat_static))
+        ms_feat_dynamic.append(reduction(feat_dynamic))
+
+    if concat_ms_feat:
+        if sample_only != 'dynamic':
+            ms_feat_static = torch.cat(ms_feat_static, dim=-1)
+        if sample_only != 'static':
+            ms_feat_dynamic = torch.cat(ms_feat_dynamic, dim=-1)
+    else:
+        ms_feat_static = reduction(ms_feat_static)
+        ms_feat_dynamic = reduction(ms_feat_dynamic)
 
     if sample_only == 'static':
-        if concat_features:
-            multi_scale_interp_static = torch.cat(multi_scale_interp_static, dim=-1)
-        return multi_scale_interp_static
-
-    if sample_only == 'dynamic':
-        if concat_features:
-            multi_scale_interp_dynamic = torch.cat(multi_scale_interp_dynamic, dim=-1)
-        return multi_scale_interp_dynamic
-    
-    if concat_features:
-        multi_scale_interp_static = torch.cat(multi_scale_interp_static, dim=-1)
-        multi_scale_interp_dynamic = torch.cat(multi_scale_interp_dynamic, dim=-1)
-
-    return multi_scale_interp_static, multi_scale_interp_dynamic
+        return ms_feat_static
+    elif sample_only == 'dynamic':
+        return ms_feat_dynamic
+    else:
+        return ms_feat_static, ms_feat_dynamic
 
 
 class Planes4D(nn.Module):
@@ -135,10 +147,11 @@ class Planes4D(nn.Module):
         grid_dimensions=2,
         input_dim=4,
         output_dim=8,
-        resolution=[64, 64, 64, 25],
+        resolution=[32, 32, 32, 8],
         multiscale_res=[1, 2, 4, 8],
-        concat_features=True,
-        decompose=True
+        concat_ms_feat=True, # concat multi-scale features
+        decompose=True,      # static & dynamic
+        reduction='prod',    # 'prod'/'sum'/'mean'
         ):
         super().__init__()
 
@@ -149,8 +162,9 @@ class Planes4D(nn.Module):
             'resolution': resolution,
         }
         self.multiscale_res = multiscale_res
-        self.concat_features = concat_features
+        self.concat_ms_feat = concat_ms_feat
         self.decompose = decompose
+        self.reduction = reduction
 
         self.planes = nn.ModuleList()
         self.n_output_dims=0
@@ -169,53 +183,58 @@ class Planes4D(nn.Module):
                 reso=config["resolution"],
             )
             # shape[1] is out-dim - Concatenate over feature len for each scale
-            if self.concat_features:
+            if self.concat_ms_feat:
                 self.n_output_dims += gp[-1].shape[1]
             else:
                 self.n_output_dims = gp[-1].shape[1]
             self.planes.append(gp)
         # print(f"Initialized model grids: {self.planes}")
-        if decompose:
-            self.n_output_dims *= 2
-    
+
+        if reduction == 'concat':
+            self.n_output_dims = self.n_output_dims * 6
+        else:
+            self.n_output_dims = self.n_output_dims * 2
+
     def forward_static(self, input):
-        ## input: [x,y,z,t] shape:[N, 4]
+        ## input: [x,y,z,t] shape:[N, 4], in [0,1]
         plane_feat_static = interpolate_ms_features(
             input,
             ms_grids=self.planes,
             grid_dimensions=self.config["grid_dimensions"],
-            concat_features=self.concat_features,
+            concat_ms_feat=self.concat_ms_feat,
             sample_only='static',
+            reduction=self.reduction,
             )
         
         return plane_feat_static
 
     def forward_dynamic(self, input):
-        ## input: [x,y,z,t] shape:[N, 4]
+        ## input: [x,y,z,t] shape:[N, 4], in [0,1]
         plane_feat_dynamic = interpolate_ms_features(
             input,
             ms_grids=self.planes,
             grid_dimensions=self.config["grid_dimensions"],
-            concat_features=self.concat_features,
+            concat_ms_feat=self.concat_ms_feat,
             sample_only='dynamic',
+            reduction=self.reduction,
             )
         
         return plane_feat_dynamic
 
     def forward(self, input):
-        ## input: [x,y,z,t] shape:[N, 4]
-
+        ## input: [x,y,z,t] shape:[N, 4], in [0,1]
         plane_feat_static, plane_feat_dynamic = interpolate_ms_features(
             input,
             ms_grids=self.planes,
             grid_dimensions=self.config["grid_dimensions"],
-            concat_features=self.concat_features,
+            concat_ms_feat=self.concat_ms_feat,
+            reduction=self.reduction,
             )
         
         if self.decompose:
             plane_feat = [plane_feat_static, plane_feat_dynamic]
         else:
-            plane_feat = plane_feat_static * plane_feat_dynamic
+            plane_feat = torch.cat([plane_feat_static, plane_feat_dynamic], dim=-1)
 
         return plane_feat
 

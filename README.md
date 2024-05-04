@@ -1,7 +1,8 @@
-# LiDAR4D
-<img src="https://github.com/ispc-lab/LiDAR4D/assets/51731102/7f3dd959-9b97-481e-8c13-45abbc2b712d" width=25%>
+<div align="center">
+<h1><img src="https://github.com/ispc-lab/LiDAR4D/assets/51731102/7f3dd959-9b97-481e-8c13-45abbc2b712d" width=25%></h1>
 
-**LiDAR4D: Dynamic Neural Fields for Novel Space-time View LiDAR Synthesis**  
+<h3>LiDAR4D: Dynamic Neural Fields for Novel Space-time View LiDAR Synthesis</h3>  
+
 [Zehan Zheng](https://dyfcalid.github.io/), [Fan Lu](https://fanlu97.github.io/), Weiyi Xue, [Guang Chen](https://ispc-group.github.io/)†, Changjun Jiang  († Corresponding author)  
 **CVPR 2024**
 
@@ -10,12 +11,15 @@
 This repository is the official PyTorch implementation for LiDAR4D.
 
 <img src="https://github.com/ispc-lab/LiDAR4D/assets/51731102/e23640bf-bd92-4ee0-88b4-375faf8c9b4d" width=50%>
+</div>
+
 
 ## Changelog
-2023-4-13:📈 We update U-Net of LiDAR4D for better ray-drop refinement.   
-2023-4-5:🚀 Code of LiDAR4D is released.  
-2023-4-4:🔥 You can reach the preprint paper on arXiv as well as the project page.  
-2023-2-27:🎉 Our paper is accepted by CVPR 2024.  
+2024-5-4:📈 We update flow fields and improve temporal interpolation.   
+2024-4-13:📈 We update U-Net of LiDAR4D for better ray-drop refinement.   
+2024-4-5:🚀 Code of LiDAR4D is released.  
+2024-4-4:🔥 You can reach the preprint paper on arXiv as well as the project page.  
+2024-2-27:🎉 Our paper is accepted by CVPR 2024.  
 
 
 ## Introduction

@@ -22,7 +22,7 @@ from model.unet import UNet
 class LiDAR4D(LiDAR_Renderer):
     def __init__(
         self,
-        min_resolution=64,
+        min_resolution=32,
         base_resolution=512,
         max_resolution=32768,
         time_resolution=25,
@@ -31,8 +31,8 @@ class LiDAR4D(LiDAR_Renderer):
         n_levels_hash=8,
         n_features_per_level_hash=4,
         log2_hashmap_size=19,
-        num_layers_flow=8,
-        hidden_dim_flow=128,
+        num_layers_flow=3,
+        hidden_dim_flow=64,
         num_layers_sigma=2,
         hidden_dim_sigma=64,
         geo_feat_dim=15,
@@ -54,8 +54,6 @@ class LiDAR4D(LiDAR_Renderer):
             output_dim=n_features_per_level_plane,
             resolution=[min_resolution] * 3 + [time_resolution],
             multiscale_res=[2**(n) for n in range(n_levels_plane)],
-            concat_features=True,
-            decompose=True,
         )
 
         self.hash_encoder = HashGrid4D(
@@ -79,7 +77,7 @@ class LiDAR4D(LiDAR_Renderer):
             input_dim=4,
             num_layers=num_layers_flow,
             hidden_dim=hidden_dim_flow,
-            num_freqs=6,
+            use_grid=True,
         )
 
         self.sigma_net = tcnn.Network(
@@ -123,10 +121,9 @@ class LiDAR4D(LiDAR_Renderer):
     def forward(self, x, d, t):
         pass
 
-    def flow(self, x, t=None):
+    def flow(self, x, t):
         # x: [N, 3] in [-bound, bound] for point clouds
         x = (x + self.bound) / (2 * self.bound)
-        frame_idx = int(t * (self.num_frames - 1))
 
         if t.shape[0] == 1:
             t = t.repeat(x.shape[0], 1)
@@ -134,17 +131,9 @@ class LiDAR4D(LiDAR_Renderer):
 
         flow = self.flow_net(xt)
 
-        flow_forward = flow_backward = None
-
-        if frame_idx < self.num_frames - 1:
-            flow_forward = flow[:, :3]
-
-        if frame_idx > 0:
-            flow_backward = flow[:, 3:]
-
         return {
-            "flow_forward": flow_forward,
-            "flow_backward": flow_backward,
+            "forward": flow[:, :3],
+            "backward": flow[:, 3:],
         }
 
     def density(self, x, t=None):

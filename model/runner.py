@@ -225,8 +225,8 @@ class Trainer(object):
             pc = torch.from_numpy(pc).cuda().float().contiguous()
 
             pred_flow = self.model.flow(pc, time_lidar)
-            pred_flow_forward = pred_flow["flow_forward"]
-            pred_flow_backward = pred_flow["flow_backward"]
+            pred_flow_forward = pred_flow["forward"]
+            pred_flow_backward = pred_flow["backward"]
 
             if f"{frame_idx+1}" in self.pc_list.keys():
                 pc_pred = pc + pred_flow_forward
@@ -234,8 +234,8 @@ class Trainer(object):
                 pc_forward = torch.from_numpy(pc_forward).cuda().float().contiguous()
                 dist1, dist2, _, _ = self.cham_fn(pc_pred.unsqueeze(0), pc_forward.unsqueeze(0))
                 chamfer_dist = (dist1.sum() + dist2.sum()) * 0.5
-                loss = loss + 0.01 * chamfer_dist
-                loss = loss + 0.01 * pred_flow_forward.abs().mean()
+                loss = loss + chamfer_dist
+                loss = loss + pred_flow_forward.abs().mean()
 
             if f"{frame_idx-1}" in self.pc_list.keys():
                 pc_pred = pc + pred_flow_backward
@@ -243,8 +243,8 @@ class Trainer(object):
                 pc_backward = torch.from_numpy(pc_backward).cuda().float().contiguous()
                 dist1, dist2, _, _ = self.cham_fn(pc_pred.unsqueeze(0), pc_backward.unsqueeze(0))
                 chamfer_dist = (dist1.sum() + dist2.sum()) * 0.5
-                loss = loss + 0.01 * chamfer_dist
-                loss = loss + 0.01 * pred_flow_backward.abs().mean()
+                loss = loss + chamfer_dist
+                loss = loss + pred_flow_backward.abs().mean()
 
         # line-of-sight loss
         if self.opt.urf_loss:
@@ -546,7 +546,6 @@ class Trainer(object):
 
     def evaluate_one_epoch(self, loader, name=None):
         self.log(f"++> Evaluate at epoch {self.epoch} ...")
-        torch.cuda.empty_cache()
 
         if name is None:
             name = f"{self.name}_ep{self.epoch:04d}"
@@ -675,7 +674,6 @@ class Trainer(object):
             self.ema.restore()
 
         self.log(f"++> Evaluate epoch {self.epoch} Finished.")
-        torch.cuda.empty_cache()
 
     ### ------------------------------
 
@@ -862,7 +860,7 @@ class Trainer(object):
 
         loss_total = []
 
-        refine_bs = None # set smaller batch size if OOM and adjust epochs accordingly
+        refine_bs = None # set smaller batch size (e.g. 32) if OOM and adjust epochs accordingly
         refine_epoch = 1000
 
         optimizer = torch.optim.Adam(self.model.unet.parameters(), lr=0.001, weight_decay=0)
@@ -965,6 +963,8 @@ class Trainer(object):
 
             file_path = f"{self.ckpt_path}/{name}.pth"
 
+            torch.save(state, file_path)
+
             if remove_old:
                 self.stats["checkpoints"].append(file_path)
 
@@ -972,8 +972,6 @@ class Trainer(object):
                     old_ckpt = self.stats["checkpoints"].pop(0)
                     if os.path.exists(old_ckpt):
                         os.remove(old_ckpt)
-
-            torch.save(state, file_path)
 
         else:
             if len(self.stats["results"]) > 0:
