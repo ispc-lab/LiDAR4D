@@ -47,7 +47,7 @@ class FlowField(nn.Module):
             num_freqs=6,
             use_grid=True,
             num_basis=4,
-            n_levels=16,
+            n_levels=8,
             n_features_per_level=8,
             base_resolution=32,
             max_resolution=8192,

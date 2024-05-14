@@ -141,6 +141,8 @@ def point_removal(pc_raw):
     indices = index_total
 
     indices = indices[pc_rm[indices, 2] < -1]
+    pc_ground = pc_rm[indices].copy()
+
     pc_rm[indices] = 999 + 1
     pc_rm = pc_rm[pc_rm[:, 2] <= 999]
 
@@ -149,4 +151,4 @@ def point_removal(pc_raw):
     pcd_rm, ind = pcd_rm.remove_statistical_outlier(64, 3.0)
     pc_rm = np.asarray(pcd_rm.points)
 
-    return pc_rm
+    return pc_rm, pc_ground

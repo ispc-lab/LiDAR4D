@@ -228,23 +228,29 @@ class Trainer(object):
             pred_flow_forward = pred_flow["forward"]
             pred_flow_backward = pred_flow["backward"]
 
-            if f"{frame_idx+1}" in self.pc_list.keys():
-                pc_pred = pc + pred_flow_forward
-                pc_forward = self.pc_list[f"{frame_idx+1}"]
-                pc_forward = torch.from_numpy(pc_forward).cuda().float().contiguous()
-                dist1, dist2, _, _ = self.cham_fn(pc_pred.unsqueeze(0), pc_forward.unsqueeze(0))
-                chamfer_dist = (dist1.sum() + dist2.sum()) * 0.5
-                loss = loss + chamfer_dist
-                loss = loss + pred_flow_forward.abs().mean()
+            # two-step consistency
+            for step in [1, 2]:
+                if f"{frame_idx+step}" in self.pc_list.keys():
+                    pc_pred = pc + pred_flow_forward * step
+                    pc_forward = self.pc_list[f"{frame_idx+step}"]
+                    pc_forward = torch.from_numpy(pc_forward).cuda().float().contiguous()
+                    dist1, dist2, _, _ = self.cham_fn(pc_pred.unsqueeze(0), pc_forward.unsqueeze(0))
+                    chamfer_dist = (dist1.sum() + dist2.sum()) * 0.5
+                    loss = loss + chamfer_dist
 
-            if f"{frame_idx-1}" in self.pc_list.keys():
-                pc_pred = pc + pred_flow_backward
-                pc_backward = self.pc_list[f"{frame_idx-1}"]
-                pc_backward = torch.from_numpy(pc_backward).cuda().float().contiguous()
-                dist1, dist2, _, _ = self.cham_fn(pc_pred.unsqueeze(0), pc_backward.unsqueeze(0))
-                chamfer_dist = (dist1.sum() + dist2.sum()) * 0.5
-                loss = loss + chamfer_dist
-                loss = loss + pred_flow_backward.abs().mean()
+                if f"{frame_idx-step}" in self.pc_list.keys():
+                    pc_pred = pc + pred_flow_backward * step
+                    pc_backward = self.pc_list[f"{frame_idx-step}"]
+                    pc_backward = torch.from_numpy(pc_backward).cuda().float().contiguous()
+                    dist1, dist2, _, _ = self.cham_fn(pc_pred.unsqueeze(0), pc_backward.unsqueeze(0))
+                    chamfer_dist = (dist1.sum() + dist2.sum()) * 0.5
+                    loss = loss + chamfer_dist
+
+            # regularize flow on the ground
+            ground = self.pc_ground_list[f"{frame_idx}"]
+            ground = torch.from_numpy(ground).cuda().float().contiguous()
+            zero_flow = self.model.flow(ground, torch.rand(1).to(time_lidar))
+            loss = loss + 0.001 * (zero_flow["forward"].abs().sum() + zero_flow["backward"].abs().sum())
 
         # line-of-sight loss
         if self.opt.urf_loss:
@@ -918,6 +924,7 @@ class Trainer(object):
     def process_pointcloud(self, loader):
         self.log("Preparing Point Clouds ...")
         self.pc_list = {}
+        self.pc_ground_list = {}
         for i, data in enumerate(loader):
             # pano to lidar
             images_lidar = data["images_lidar"]
@@ -928,16 +935,20 @@ class Trainer(object):
                 loader._data.intrinsics_lidar
             )
             # remove ground
-            points = point_removal(gt_lidar)
+            points, ground = point_removal(gt_lidar)
             # transform
             pose = data["poses_lidar"].squeeze(0)
             pose = pose.clone().detach().cpu().numpy()
             points = points * self.opt.scale
             points = np.hstack((points, np.ones((points.shape[0], 1))))
             points = (pose @ points.T).T[:,:3]
+            ground = ground * self.opt.scale
+            ground = np.hstack((ground, np.ones((ground.shape[0], 1))))
+            ground = (pose @ ground.T).T[:,:3]
             time_lidar = data["time"]
             frame_idx = int(time_lidar * (self.opt.num_frames - 1))
             self.pc_list[f"{frame_idx}"] = points
+            self.pc_ground_list[f"{frame_idx}"] = ground
             if i % 10 == 0:
                 print(f"{i+1}/{len(loader)}")
 

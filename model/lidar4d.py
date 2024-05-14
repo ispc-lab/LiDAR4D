@@ -25,7 +25,7 @@ class LiDAR4D(LiDAR_Renderer):
         min_resolution=32,
         base_resolution=512,
         max_resolution=32768,
-        time_resolution=25,
+        time_resolution=8,
         n_levels_plane=4,
         n_features_per_level_plane=8,
         n_levels_hash=8,

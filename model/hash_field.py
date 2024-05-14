@@ -30,7 +30,7 @@ def reduction_func(reduction):
 class HashGridT(nn.Module):
     def __init__(
         self,
-        time_resolution=25,
+        time_resolution=8,
         base_resolution=512,
         max_resolution=32768,
         n_levels=8,
