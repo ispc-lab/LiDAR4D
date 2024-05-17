@@ -31,7 +31,7 @@ LiDAR4D is a differentiable LiDAR-only framework for novel space-time LiDAR view
 ## Getting started
 
 
-### Installation
+### 🛠️ Installation
 
 ```bash
 git clone https://github.com/ispc-lab/LiDAR4D.git
@@ -62,12 +62,12 @@ python setup.py install
 ```
 
 
-### Dataset
+### 📁 Dataset
 
 #### KITTI-360 dataset ([Download](https://www.cvlibs.net/datasets/kitti-360/download.php))
 We use sequence00 (`2013_05_28_drive_0000_sync`) for experiments in our paper.  
 
-<img src="https://github.com/ispc-lab/LiDAR4D/assets/51731102/c9f5d5c5-ac48-4d54-8109-9a8b745bbca0" width=50%>  
+<img src="https://github.com/ispc-lab/LiDAR4D/assets/51731102/c9f5d5c5-ac48-4d54-8109-9a8b745bbca0" width=65%>  
 
 Download KITTI-360 dataset (2D images are not needed) and put them into `data/kitti360`.  
 (or use symlinks: `ln -s DATA_ROOT/KITTI-360 ./data/kitti360/`).  
@@ -105,7 +105,7 @@ data
     └── transforms_{sequence_id}val.json
 ```
 
-### Run LiDAR4D
+### 🚀 Run LiDAR4D
 
 Set corresponding sequence config path in `--config` and you can modify logging file path in `--workspace`. Remember to set available GPU ID in `CUDA_VISIBLE_DEVICES`.   
 Run the following command:
@@ -113,6 +113,127 @@ Run the following command:
 # KITTI-360
 bash run_kitti_lidar4d.sh
 ```
+
+## Results
+
+**KITTI-360 *Dynamic* Dataset** (Sequences: `2350` `4950` `8120` `10200` `10750` `11400`)
+
+<table>
+<tbody align="center" valign="center">
+  <tr>
+    <th rowspan="2">Method</th>
+    <th colspan="2">Point Cloud</th>
+    <th colspan="5">Depth</th>
+    <th colspan="5">Intensity</th>
+  </tr>
+  <tr>
+    <th>CD↓</th>
+    <th nowrap="true">F-Score↑</th>
+    <th>RMSE↓</th>
+    <th>MedAE↓</th>
+    <th>LPIPS↓</th>
+    <th>SSIM↑</th>
+    <th>PSNR↑</th>
+    <th>RMSE↓</th>
+    <th>MedAE↓</th>
+    <th>LPIPS↓</th>
+    <th>SSIM↑</th>
+    <th>PSNR↑</th>
+  </tr>
+  <tr>
+    <td>LiDAR-NeRF</td>
+    <td>0.1438</td>
+    <td>0.9091</td>
+    <td>4.1753</td>
+    <td>0.0566</td>
+    <td>0.2797</td>
+    <td>0.6568</td>
+    <td>25.9878</td>
+    <td>0.1404</td>
+    <td>0.0443</td>
+    <td>0.3135</td>
+    <td>0.3831</td>
+    <td>17.1549</td>
+  </tr>
+  <tr>
+    <td>LiDAR4D (Ours) †</td>
+    <td><b>0.1002</b></td>
+    <td><b>0.9320</b></td>
+    <td><b>3.0589</b></td>
+    <td><b>0.0280</b></td>
+    <td><b>0.0689</b></td>
+    <td><b>0.8770</b></td>
+    <td><b>28.7477</b></td>
+    <td><b>0.0995</b></td>
+    <td><b>0.0262</b></td>
+    <td><b>0.1498</b></td>
+    <td><b>0.6561</b></td>
+    <td><b>20.0884</b></td>
+  </tr>
+</tbody>
+</table>
+
+<br>
+
+**KITTI-360 *Static* Dataset** (Sequences: `1538` `1728` `1908` `3353`)
+
+<table>
+<tbody align="center" valign="center">
+  <tr>
+    <th rowspan="2">Method</th>
+    <th colspan="2">Point Cloud</th>
+    <th colspan="5">Depth</th>
+    <th colspan="5">Intensity</th>
+  </tr>
+  <tr>
+    <th>CD↓</th>
+    <th nowrap="true">F-Score↑</th>
+    <th>RMSE↓</th>
+    <th>MedAE↓</th>
+    <th>LPIPS↓</th>
+    <th>SSIM↑</th>
+    <th>PSNR↑</th>
+    <th>RMSE↓</th>
+    <th>MedAE↓</th>
+    <th>LPIPS↓</th>
+    <th>SSIM↑</th>
+    <th>PSNR↑</th>
+  </tr>
+  <tr>
+    <td>LiDAR-NeRF</td>
+    <td>0.0923</td>
+    <td>0.9226</td>
+    <td>3.6801</td>
+    <td>0.0667</td>
+    <td>0.3523</td>
+    <td>0.6043</td>
+    <td>26.7663</td>
+    <td>0.1557</td>
+    <td>0.0549</td>
+    <td>0.4212</td>
+    <td>0.2768</td>
+    <td>16.1683</td>
+  </tr>
+  <tr>
+    <td>LiDAR4D (Ours) †</td>
+    <td><b>0.0834</b></td>
+    <td><b>0.9312</b></td>
+    <td><b>2.7413</b></td>
+    <td><b>0.0367</b></td>
+    <td><b>0.0995</b></td>
+    <td><b>0.8484</b></td>
+    <td><b>29.3359</b></td>
+    <td><b>0.1116</b></td>
+    <td><b>0.0335</b></td>
+    <td><b>0.1799</b></td>
+    <td><b>0.6120</b></td>
+    <td><b>19.0619</b></td>
+  </tr>
+</tbody>
+</table>
+
+†: The latest results better than the paper.  
+*Experiments are conducted on the NVIDIA 4090 GPU. Results may be subject to some variation and randomness.*
 
 ## Acknowledgment
 We sincerely appreciate the great contribution of the following works:
@@ -123,7 +244,7 @@ We sincerely appreciate the great contribution of the following works:
 
 
 ## Citation
-Please use the following citation if you find our repo or paper helps:  
+If you find our repo or paper helpful, feel free to support us with a star 🌟 or use the following citation:  
 ```bibtex
 @inproceedings{zheng2024lidar4d,
   title     = {LiDAR4D: Dynamic Neural Fields for Novel Space-time View LiDAR Synthesis},
