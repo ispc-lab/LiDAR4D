@@ -13,13 +13,46 @@ This repository is the official PyTorch implementation for LiDAR4D.
 <img src="https://github.com/ispc-lab/LiDAR4D/assets/51731102/e23640bf-bd92-4ee0-88b4-375faf8c9b4d" width=50%>
 </div>
 
+<!-- TABLE OF CONTENTS -->
+<details open="open" style='padding: 10px; border-radius:5px 30px 30px 5px; border-style: solid; border-width: 1px;'>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li>
+      <a href="#changelog">Changelog</a>
+    </li>
+    <li>
+      <a href="#demo">Demo</a>
+    </li>
+    <li>
+      <a href="#introduction">Introduction</a>
+    </li>
+    <li>
+      <a href="#getting-started">Getting started</a>
+    </li>
+    <li>
+      <a href="#results">Results</a>
+    </li>
+    <li>
+      <a href="#simulation">Simulation</a>
+    </li>
+    <li>
+      <a href="#citation">Citation</a>
+    </li>
+  </ol>
+</details>
+
 
 ## Changelog
+2024-6-1:🕹️ We release the simulator for easier rendering and manipulation. *Happy Children's Day and Have Fun!*   
 2024-5-4:📈 We update flow fields and improve temporal interpolation.   
 2024-4-13:📈 We update U-Net of LiDAR4D for better ray-drop refinement.   
 2024-4-5:🚀 Code of LiDAR4D is released.  
 2024-4-4:🔥 You can reach the preprint paper on arXiv as well as the project page.  
 2024-2-27:🎉 Our paper is accepted by CVPR 2024.  
+
+
+## Demo
+<video src="https://github.com/ispc-lab/LiDAR4D/assets/51731102/34f898ec-404d-4f10-afe5-1e471df2cfe2"></video>
 
 
 ## Introduction
@@ -114,7 +147,10 @@ Run the following command:
 bash run_kitti_lidar4d.sh
 ```
 
-## Results
+
+<a id="results"></a>
+
+## 📊 Results 
 
 **KITTI-360 *Dynamic* Dataset** (Sequences: `2350` `4950` `8120` `10200` `10750` `11400`)
 
@@ -235,7 +271,24 @@ bash run_kitti_lidar4d.sh
 †: The latest results better than the paper.  
 *Experiments are conducted on the NVIDIA 4090 GPU. Results may be subject to some variation and randomness.*
 
-## Acknowledgment
+
+<a id="simulation"></a>
+
+## 🕹️ Simulation
+<img src="https://github.com/ispc-lab/LiDAR4D/assets/51731102/ada49a62-8b53-47fe-8cc0-4d99af1ebad8" width=75%>  
+<!-- <img src="https://github.com/ispc-lab/LiDAR4D/assets/51731102/1b34a7b4-4238-470a-acfd-499fe697e3d1" width=75%>   -->
+
+After reconstruction, you can use the simulator to render and manipulate LiDAR point clouds in the whole scenario. It supports dynamic scene re-play, novel LiDAR configurations (`--fov_lidar`, `--H_lidar`, `--W_lidar`) and novel trajectory (`--shift_x`, `--shift_y`, `--shift_z`).  
+We also provide a simple demo setting to transform LiDAR configurations from KITTI-360 to NuScenes, using `--kitti2nus` in the bash script.    
+Check the sequence config and corresponding workspace and model path (`--ckpt`).  
+Run the following command:
+```bash
+bash run_kitti_lidar4d_sim.sh
+```
+The results will be saved in the workspace folder.
+
+
+## Acknowledgement
 We sincerely appreciate the great contribution of the following works:
 - [tiny-cuda-nn](https://github.com/NVlabs/tiny-cuda-nn/tree/master)
 - [LiDAR-NeRF](https://github.com/tangtaogo/lidar-nerf)
