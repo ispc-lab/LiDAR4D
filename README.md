@@ -6,7 +6,8 @@
 [Zehan Zheng](https://dyfcalid.github.io/), [Fan Lu](https://fanlu97.github.io/), Weiyi Xue, [Guang Chen](https://ispc-group.github.io/)†, Changjun Jiang  († Corresponding author)  
 **CVPR 2024**
 
-**[Paper](https://arxiv.org/abs/2404.02742) | [Project Page](https://dyfcalid.github.io/LiDAR4D)**  
+
+**[Paper (arXiv)](https://arxiv.org/abs/2404.02742) | [Paper (CVPR)](https://openaccess.thecvf.com/content/CVPR2024/html/Zheng_LiDAR4D_Dynamic_Neural_Fields_for_Novel_Space-time_View_LiDAR_Synthesis_CVPR_2024_paper.html) | [Project Page](https://dyfcalid.github.io/LiDAR4D) | [Video](https://www.youtube.com/watch?v=E6XyG3A3EZ8) | [Poster](https://drive.google.com/file/d/13cf0rSjCjGRyBsYOcQSa6Qf1Oe1a5QCy/view?usp=sharing) | [Slides](https://drive.google.com/file/d/1Q6yTVGoBf_nfWR4rW9RcSGlxRMufmSXc/view?usp=sharing)**  
 
 This repository is the official PyTorch implementation for LiDAR4D.
 
